@@ -1,53 +1,71 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { API_EndPoint } from "../utils/constants";
 
 const SearchInput = () => {
-  const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [error, setError] = useState(null);
+  const inputRef = useRef(null);
 
-  useEffect(() => {
-    if (query.length) {
-      const fetchData = async () => {
-        try {
-          const response = await fetch(
-            `${API_EndPoint}${encodeURIComponent(query)}`
-          );
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          const data = await response.json();
-          setSuggestions(data[1]);
-          setError(null);
-        } catch (err) {
-          console.error("Error fetching data:", err);
-          setError(
-            "Failed to fetch suggestions. Please check your connection and try again."
-          );
-          setSuggestions([]);
-        }
-      };
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func(...args);
+      }, delay);
+    };
+  };
 
-      const timeoutId = setTimeout(fetchData, 300); // Debounce API calls
-      return () => clearTimeout(timeoutId);
+  const fetchData = debounce(async (searchTerm) => {
+    if (searchTerm.length > 0) {
+      try {
+        const resp = await fetch(
+          `${API_EndPoint}${encodeURIComponent(searchTerm)}`
+        );
+        const data = await resp.json();
+        setSuggestions(data[1]);
+        setError(null);
+      } catch (error) {
+        console.error("API error", error);
+        setError("API error");
+        setSuggestions([]);
+      }
     } else {
       setSuggestions([]);
       setError(null);
     }
-  }, [query]);
+  }, 300);
 
   const handleSelect = (suggestion) => {
     setQuery(suggestion);
     setShowDropdown(false);
   };
 
+  const handleClickOutside = (eve) => {
+    if (inputRef.current && !inputRef.current.contains(eve.target)) {
+      setShowDropdown(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchData(query);
+  }, [query]);
+
   return (
-    <div className="relative w-64">
+    <div className="relative w-60" ref={inputRef}>
       <input
         type="text"
-        className="w-full p-2 border border-gray-300 rounded"
-        placeholder="Search Wikipedia..."
+        className="w-full p-2 rounded border border-gray-300"
+        placeholder="Search..."
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -55,13 +73,13 @@ const SearchInput = () => {
         }}
         onFocus={() => setShowDropdown(true)}
       />
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {!!error && <p className="text-red-500 text-sm">{error}</p>}
       {showDropdown && suggestions.length > 0 && (
-        <ul className="absolute w-full bg-white border border-gray-300 rounded mt-1 max-h-40 overflow-auto">
+        <ul className="absolute w-full max-h-40 border bg-white border-gray-300 overflow-auto">
           {suggestions.map((suggestion, index) => (
             <li
               key={index}
-              className="p-2 cursor-pointer hover:bg-gray-200"
+              className="cursor-pointer p-2 hover:bg-gray-200"
               onClick={() => handleSelect(suggestion)}
             >
               {suggestion}
