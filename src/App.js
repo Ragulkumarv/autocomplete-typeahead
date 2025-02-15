@@ -1,7 +1,10 @@
 import "./App.css";
+import SearchInput from "./components/SearchInput";
 
 export default function App() {
   return (
-    <h1 className="text-3xl font-bold underline text-center">Hello world!</h1>
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <SearchInput />
+    </div>
   );
 }
