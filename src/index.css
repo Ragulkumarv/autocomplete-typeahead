@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.autocomplete-suggestions {
+  position: absolute;
+  border: 1px solid #d1d5db;
+  overflow: auto;
+  background-color: white;
+  width: 100%;
+  max-height: 10rem;
+}

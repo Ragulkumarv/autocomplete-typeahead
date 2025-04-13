@@ -75,7 +75,7 @@ const SearchInput = () => {
       />
       {!!error && <p className="text-red-500 text-sm">{error}</p>}
       {showDropdown && suggestions.length > 0 && (
-        <ul className="absolute w-full max-h-40 border bg-white border-gray-300 overflow-auto">
+        <ul className=" autocomplete-suggestions">
           {suggestions.map((suggestion, index) => (
             <li
               key={index}
